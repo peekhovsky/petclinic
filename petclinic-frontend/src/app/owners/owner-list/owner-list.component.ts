@@ -55,8 +55,9 @@ export class OwnerListComponent implements OnInit {
       return this.filteredOwners;
     }
     const direction = this.sortDescending ? -1 : 1;
-    return [...this.filteredOwners].sort((a, b) =>
-      direction * this.sortValue(a, column).localeCompare(this.sortValue(b, column), undefined, {sensitivity: 'base'}));
+    const compare = (a: Owner, b: Owner) =>
+      this.sortValue(a, column).localeCompare(this.sortValue(b, column), undefined, {sensitivity: 'base'});
+    return [...this.filteredOwners].sort((a, b) => direction * compare(a, b));
   }
 
   get pageCount(): number {
