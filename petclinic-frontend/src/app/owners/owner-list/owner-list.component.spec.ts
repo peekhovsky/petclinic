@@ -9,7 +9,7 @@ import {FormsModule} from '@angular/forms';
 import {ActivatedRoute} from '@angular/router';
 import { OwnerService } from '../owner.service';
 import {Owner} from '../owner';
-import {Observable, of, Subject} from 'rxjs';
+import {Observable, of} from 'rxjs';
 import {RouterTestingModule} from '@angular/router/testing';
 import {CommonModule} from '@angular/common';
 import {PartsModule} from '../../parts/parts.module';
@@ -27,9 +27,6 @@ class OwnerServiceStub {
     return of();
   }
 
-  searchOwners(lastName: string): Observable<Owner[]> {
-    return of();
-  }
 }
 
 describe('OwnerListComponent', () => {
@@ -38,7 +35,6 @@ describe('OwnerListComponent', () => {
   let fixture: ComponentFixture<OwnerListComponent>;
   let ownerService = new OwnerServiceStub();
   let getOwnersSpy: Spy;
-  let searchOwnersSpy: Spy;
   let de: DebugElement;
   let el: HTMLElement;
 
@@ -81,8 +77,6 @@ describe('OwnerListComponent', () => {
     ownerService = fixture.debugElement.injector.get(OwnerService);
     getOwnersSpy = spyOn(ownerService, 'getOwners')
       .and.returnValue(of(testOwners));
-    searchOwnersSpy = spyOn(ownerService, 'searchOwners')
-      .and.returnValue(of(testOwners));
 
   });
 
@@ -106,37 +100,34 @@ describe('OwnerListComponent', () => {
     });
   }));
 
-  it('searchByLastName should call getOwners for empty term', () => {
-    getOwnersSpy.calls.reset();
-    searchOwnersSpy.calls.reset();
+  describe('filter', () => {
+    const davis: Owner = {
+      ...testOwner, id: 2, firstName: 'Betty', lastName: 'Davis', address: '638 Cardinal Ave.',
+      city: 'Sun Prairie', telephone: '6085551749', pets: [{id: 7, name: 'Basil'} as any]
+    };
 
-    component.searchByLastName('');
+    beforeEach(() => {
+      getOwnersSpy.and.returnValue(of([testOwner, davis]));
+      fixture.detectChanges();
+    });
 
-    expect(getOwnersSpy).toHaveBeenCalled();
-    expect(searchOwnersSpy).not.toHaveBeenCalled();
-  });
+    it('shows everyone for an empty filter', () => {
+      expect(component.filteredOwners).toEqual([testOwner, davis]);
+    });
 
-  it('searchByLastName should call searchOwners for non-empty term', () => {
-    getOwnersSpy.calls.reset();
-    searchOwnersSpy.calls.reset();
-
-    component.searchByLastName('Fr');
-
-    expect(searchOwnersSpy).toHaveBeenCalledWith('Fr');
-    expect(getOwnersSpy).not.toHaveBeenCalled();
-  });
-
-  // The page loads every owner on open; a search typed before that answer arrives must
-  // not be overwritten by it when it finally does.
-  it('a search is not overwritten by the initial load answering late', () => {
-    const initialLoad = new Subject<Owner[]>();
-    getOwnersSpy.and.returnValue(initialLoad);
-    fixture.detectChanges();
-
-    component.searchByLastName('Franklin');
-    initialLoad.next([testOwner, {...testOwner, id: 2, lastName: 'Davis'}]);
-
-    expect(component.owners).toEqual([testOwner]);
+    it('matches every visible column, case-insensitively', () => {
+      const matching = (term: string) => {
+        component.filter = term;
+        return component.filteredOwners;
+      };
+      expect(matching('betty')).toEqual([davis]);       // first name
+      expect(matching('FRANKLIN')).toEqual([testOwner]); // last name
+      expect(matching('cardinal')).toEqual([davis]);    // address
+      expect(matching('madison')).toEqual([testOwner]); // city
+      expect(matching('1749')).toEqual([davis]);        // telephone
+      expect(matching('basil')).toEqual([davis]);       // pet name
+      expect(matching('nobody')).toEqual([]);
+    });
   });
 
 });
