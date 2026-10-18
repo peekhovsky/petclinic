@@ -130,4 +130,53 @@ describe('OwnerListComponent', () => {
     });
   });
 
+  describe('sorting and paging', () => {
+    const owner = (id: number, firstName: string, city: string): Owner =>
+      ({...testOwner, id, firstName, lastName: 'X', city});
+    const names = () => component.pagedOwners.map(o => o.firstName);
+
+    beforeEach(() => {
+      getOwnersSpy.and.returnValue(of(
+        ['b', 'D', 'a', 'f', 'c', 'e', 'g'].map((name, i) => owner(i, name, 'City' + (7 - i)))));
+      fixture.detectChanges();
+    });
+
+    it('shows 5 rows per page by default and pages through the rest', () => {
+      expect(component.pagedOwners.length).toBe(5);
+      component.goToPage(1);
+      expect(component.pagedOwners.length).toBe(2);
+      component.goToPage(5);
+      expect(component.currentPage).toBe(1);
+    });
+
+    it('offers 5, 10 and 20 rows per page and returns to the first page on change', () => {
+      expect(component.pageSizes).toEqual([5, 10, 20]);
+      component.goToPage(1);
+      component.setPageSize(10);
+      expect(component.currentPage).toBe(0);
+      expect(component.pagedOwners.length).toBe(7);
+    });
+
+    it('sorts all rows, not just the page, ascending then descending, ignoring case', () => {
+      component.sortBy('name');
+      expect(names()).toEqual(['a', 'b', 'c', 'D', 'e']);
+      component.sortBy('name');
+      expect(names()).toEqual(['g', 'f', 'e', 'D', 'c']);
+    });
+
+    it('sorts by any column and restarts from the first page', () => {
+      component.goToPage(1);
+      component.sortBy('city');
+      expect(component.currentPage).toBe(0);
+      expect(names()[0]).toBe('g');
+    });
+
+    it('pages the filtered rows and clamps when the filter shrinks them', () => {
+      component.goToPage(1);
+      component.filter = 'a';
+      expect(component.currentPage).toBe(0);
+      expect(names()).toEqual(['a']);
+    });
+  });
+
 });

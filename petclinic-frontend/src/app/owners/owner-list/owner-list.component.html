@@ -27,16 +27,16 @@
       <table class="table table-striped">
         <thead>
         <tr>
-          <th>Name</th>
-          <th>Address</th>
-          <th>City</th>
-          <th>Telephone</th>
-          <th>Pets</th>
+          <th class="sortable" (click)="sortBy('name')">Name {{ sortIndicator('name') }}</th>
+          <th class="sortable" (click)="sortBy('address')">Address {{ sortIndicator('address') }}</th>
+          <th class="sortable" (click)="sortBy('city')">City {{ sortIndicator('city') }}</th>
+          <th class="sortable" (click)="sortBy('telephone')">Telephone {{ sortIndicator('telephone') }}</th>
+          <th class="sortable" (click)="sortBy('pets')">Pets {{ sortIndicator('pets') }}</th>
         </tr>
         </thead>
 
         <tbody>
-        <tr *ngFor="let owner of filteredOwners">
+        <tr *ngFor="let owner of pagedOwners">
           <td class="ownerFullName"><a routerLink="/owners/{{owner.id}}" routerLinkActive="active"
             (click)="onSelect(owner)">{{ owner.firstName }} {{ owner.lastName }}</a></td>
           <td>{{ owner.address }}</td>
@@ -50,6 +50,16 @@
         </tr>
         </tbody>
       </table>
+      <div class="pager form-inline">
+        <label for="pageSize">Rows per page</label>
+        <app-combo inputId="pageSize" [options]="pageSizes" [ngModel]="pageSize"
+                   (ngModelChange)="setPageSize($event)" [ngModelOptions]="{standalone: true}"></app-combo>
+        <button class="btn btn-default" id="prevPage" [disabled]="currentPage === 0"
+                (click)="goToPage(currentPage - 1)">Previous</button>
+        <span id="pageInfo">Page {{ currentPage + 1 }} of {{ pageCount }}</span>
+        <button class="btn btn-default" id="nextPage" [disabled]="currentPage >= pageCount - 1"
+                (click)="goToPage(currentPage + 1)">Next</button>
+      </div>
       <div>
         <button *ngIf="isOwnersDataReceived" class="btn btn-default" (click)="addOwner()">Add Owner</button>
       </div>

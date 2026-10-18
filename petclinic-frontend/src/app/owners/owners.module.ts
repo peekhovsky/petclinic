@@ -7,6 +7,7 @@ import {FormsModule} from '@angular/forms';
 import {OwnerAddComponent} from './owner-add/owner-add.component';
 import {OwnerEditComponent} from './owner-edit/owner-edit.component';
 import {OwnersRoutingModule} from './owners-routing.module';
+import {DesignSystemModule} from '../design-system/design-system.module';
 import {PetsModule} from '../pets/pets.module';
 
 @NgModule({
@@ -14,7 +15,8 @@ import {PetsModule} from '../pets/pets.module';
     CommonModule,
     FormsModule,
     OwnersRoutingModule,
-    PetsModule
+    PetsModule,
+    DesignSystemModule
   ],
   declarations: [
     OwnerListComponent,
