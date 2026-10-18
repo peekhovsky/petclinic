@@ -102,9 +102,8 @@ public class OwnerRestController {
                     name = "search", defaultValue = "") String search,
             @RequestParam(name = "page", defaultValue = "0") @Min(0) int page,
             @RequestParam(name = "size", defaultValue = "10") @Min(1) @Max(100) int size,
-            @Parameter(
-                    description = "column[,asc|desc], column is one of name, address, city, telephone, pets") @RequestParam(
-                            name = "sort", defaultValue = "name,asc") String sort) {
+            @Parameter(description = "column[,asc|desc]: name, address, city, telephone or pets") @RequestParam(
+                    name = "sort", defaultValue = "name,asc") String sort) {
         Pageable pageable = PageRequest.of(page, size, OwnerSort.parse(sort));
         return ownerMapper.toOwnerPageDto(ownerRepository.search(likePattern(search), pageable));
     }

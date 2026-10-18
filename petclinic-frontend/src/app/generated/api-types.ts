@@ -580,7 +580,7 @@ export interface operations {
         search?: string;
         page?: number;
         size?: number;
-        /** @description column[,asc|desc], column is one of name, address, city, telephone, pets */
+        /** @description column[,asc|desc]: name, address, city, telephone or pets */
         sort?: string;
       };
     };
