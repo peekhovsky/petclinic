@@ -49,6 +49,8 @@ export class PlaywrightWorld extends World {
   visitDescription?: string;
   // Set by the owner-search scenarios: every owner the API knows, by full name.
   allOwnerNames?: string[];
+  // Set when the scenario pages forward: the names on the page it left.
+  firstPageNames?: string[];
   // Set only for @generate_sequence scenarios: the title + start of the Tempo
   // search window whose traces become a sequence diagram.
   traceTitle?: string;

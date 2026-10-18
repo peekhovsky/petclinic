@@ -15,7 +15,7 @@ export interface paths {
     patch: operations["redirectToSwagger_4"];
   };
   "/api/owners": {
-    /** List owners */
+    /** List owners, one page at a time */
     get: operations["listOwners"];
     /** Create an owner */
     post: operations["addOwner"];
@@ -169,6 +169,25 @@ export interface components {
        * @example 6085551023
        */
       telephone: string;
+    };
+    /** @description One page of owners */
+    OwnerPageDto: {
+      content: components["schemas"]["OwnerDto"][];
+      /**
+       * Format: int32
+       * @description Zero-based page index
+       */
+      page: number;
+      /**
+       * Format: int32
+       * @description Requested rows per page
+       */
+      size: number;
+      /**
+       * Format: int64
+       * @description Owners matching the search, over all pages
+       */
+      totalElements: number;
     };
     PetDto: {
       /**
@@ -553,21 +572,26 @@ export interface operations {
       };
     };
   };
-  /** List owners */
+  /** List owners, one page at a time */
   listOwners: {
     parameters: {
       query?: {
-        lastName?: string;
+        /** @description Case-insensitive text found in any column or pet name */
+        search?: string;
+        page?: number;
+        size?: number;
+        /** @description column[,asc|desc], column is one of name, address, city, telephone, pets */
+        sort?: string;
       };
     };
     responses: {
       /** @description OK */
       200: {
         content: {
-          "application/json": components["schemas"]["OwnerDto"][];
+          "application/json": components["schemas"]["OwnerPageDto"];
         };
       };
-      /** @description Bad Request */
+      /** @description Unknown sort column or invalid page parameters */
       400: {
         content: {
           "*/*": components["schemas"]["ProblemDetail"];

@@ -102,7 +102,8 @@ class AddVisitApiTest {
      * wraps the call in the span that carries the JSON payloads onto the diagram.
      */
     private JsonNode anOwnerWithAPet() throws Exception {
-        JsonNode owners = json(call(mockMvc, get("/api/owners")).andExpect(status().isOk()));
+        JsonNode page = json(call(mockMvc, get("/api/owners?size=100")).andExpect(status().isOk()));
+        JsonNode owners = page.path("content");
         return StreamSupport.stream(owners.spliterator(), false)
                 .filter(o -> !o.path("pets").isEmpty())
                 .findFirst()

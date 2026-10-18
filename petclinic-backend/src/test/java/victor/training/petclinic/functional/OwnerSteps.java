@@ -49,9 +49,9 @@ public class OwnerSteps {
     public void theOwnerIsSearchableByLastName(String lastName) {
         var response = RestAssured.given()
                 .baseUri(http.baseUri())
-                .get("/api/owners?lastName=" + lastName);
+                .get("/api/owners?search=" + lastName);
         assertThat(response.statusCode()).isEqualTo(200);
-        List<String> lastNames = response.jsonPath().getList("lastName", String.class);
+        List<String> lastNames = response.jsonPath().getList("content.lastName", String.class);
         assertThat(lastNames).contains(lastName);
     }
 
@@ -64,9 +64,9 @@ public class OwnerSteps {
         }
     }
 
-    @Then("the response JSON array has size {int}")
-    public void theResponseJsonArrayHasSize(int expected) {
-        assertThat(http.getLastResponse().jsonPath().getList("$").size()).isEqualTo(expected);
+    @Then("the response page has {int} owners")
+    public void theResponsePageHasOwners(int expected) {
+        assertThat(http.getLastResponse().jsonPath().getList("content").size()).isEqualTo(expected);
     }
 
     @Then("every item in the response has {string} equal to {string}")
