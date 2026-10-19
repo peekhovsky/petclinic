@@ -16,6 +16,10 @@ const API_BASE = process.env.API_BASE_URL || 'http://localhost:8080/api';
 const fullName = (o: {firstName: string; lastName: string}) => `${o.firstName} ${o.lastName}`;
 const namesIn = (cell: string) => cell.split(',').map((n) => n.trim()).filter(Boolean);
 
+const ownerCells = (world: PlaywrightWorld) => world.page.locator('#ownersTable td.ownerFullName');
+const listedNames = async (world: PlaywrightWorld) =>
+  (await ownerCells(world).allTextContents()).map((t) => t.trim()).filter(Boolean);
+
 /** Polls until the table has settled on exactly `expected` — order-insensitive. */
 async function expectOwnersListed(world: PlaywrightWorld, expected: string[]): Promise<void> {
   const cells = world.page.locator('#ownersTable td.ownerFullName');
@@ -30,11 +34,11 @@ async function expectOwnersListed(world: PlaywrightWorld, expected: string[]): P
  * db/seed/R__seed.sql) fails on the Given instead of looking like a broken search.
  */
 Given('the clinic has these owners', async function (this: PlaywrightWorld, owners: DataTable) {
-  const {data} = await axios.get(`${API_BASE}/owners`, {timeout: 10_000});
-  if (!Array.isArray(data) || data.length === 0) {
+  const {data: page} = await axios.get(`${API_BASE}/owners?size=100`, {timeout: 10_000});
+  if (!Array.isArray(page.content) || page.content.length === 0) {
     throw new Error('The API returned no owners — is the backend up and the DB seeded by Flyway?');
   }
-  const names: string[] = data.map(fullName);
+  const names: string[] = page.content.map(fullName);
   expect(names).toEqual(expect.arrayContaining(owners.raw().map(([name]) => name.trim())));
   this.allOwnerNames = names;
 });
@@ -53,6 +57,26 @@ Then('exactly these owners are listed: {string}', async function (this: Playwrig
   await expectOwnersListed(this, namesIn(owners));
 });
 
-Then('every owner in the clinic is listed', async function (this: PlaywrightWorld) {
-  await expectOwnersListed(this, this.requireAllOwnerNames());
+When('I go to the next page', async function (this: PlaywrightWorld) {
+  await expect(ownerCells(this)).toHaveCount(10, {timeout: 10_000});
+  this.firstPageNames = await listedNames(this);
+  await this.page.locator('button.mat-mdc-paginator-navigation-next').click();
 });
+
+Then('the first {int} owners of the clinic are listed', async function (this: PlaywrightWorld, size: number) {
+  const everyone = this.requireAllOwnerNames();
+  await expect(ownerCells(this)).toHaveCount(Math.min(size, everyone.length), {timeout: 10_000});
+  for (const name of await listedNames(this)) {
+    expect(everyone).toContain(name);
+  }
+  await expect(this.page.locator('.mat-mdc-paginator-range-label'))
+    .toContainText(`of ${everyone.length}`);
+});
+
+Then('the remaining owners of the clinic are listed after the first {int}',
+  async function (this: PlaywrightWorld, size: number) {
+    const everyone = this.requireAllOwnerNames();
+    await expect(ownerCells(this)).toHaveCount(everyone.length - size, {timeout: 10_000});
+    const second = await listedNames(this);
+    expect([...(this.firstPageNames ?? []), ...second].sort()).toEqual([...everyone].sort());
+  });

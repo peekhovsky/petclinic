@@ -5,16 +5,16 @@ Feature: Owner management
     Then the response status is 201
     And the owner is searchable by last name "Rodriquez"
 
-  Scenario: Search owners by last name
+  Scenario: Search owners by text
     Given the following owners exist:
       | firstName | lastName  |
       | George    | Franklin  |
       | Betty     | Davis     |
       | Harold    | Davis     |
-    When I GET "/api/owners?lastName=Dav"
+    When I GET "/api/owners?search=Dav"
     Then the response status is 200
-    And the response JSON array has size 2
-    And every item in the response has "lastName" equal to "Davis"
+    And the response page has 2 owners
+    And every item in the response has "content.lastName" equal to "Davis"
 
   Scenario: Owner profile includes pets with their type
     Given an owner "Jean Coleman" with a "dog" pet named "Samantha" born on "2020-03-15"

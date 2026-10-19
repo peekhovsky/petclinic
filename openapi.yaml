@@ -191,12 +191,37 @@ paths:
     get:
       operationId: listOwners
       parameters:
-      - in: query
-        name: lastName
+      - description: Case-insensitive text found in any column or pet name
+        in: query
+        name: search
         required: false
         schema:
           type: string
           default: ""
+      - in: query
+        name: page
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+          minimum: 0
+      - in: query
+        name: size
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 10
+          maximum: 100
+          minimum: 1
+      - description: "column[,asc|desc]: name, address, city, telephone or pets"
+        in: query
+        name: sort
+        required: false
+        schema:
+          type: string
+          default: "name,asc"
       responses:
         "200":
           content:
@@ -205,39 +230,41 @@ paths:
                 sample:
                   description: sample
                   value:
-                  - id: 1
-                    firstName: George
-                    lastName: Franklin
-                    address: 110 W. Liberty St.
-                    city: Madison
-                    telephone: "6085551023"
-                    pets:
+                    content:
                     - id: 1
-                      name: Leo
-                      birthDate: 2010-09-07
-                      type:
-                        id: 1
-                        name: cat
-                      ownerId: 1
-                      visits: []
-                  - id: 2
-                    firstName: Betty
-                    lastName: Davis
-                    address: 638 Cardinal Ave.
-                    city: Sun Prairie
-                    telephone: "6085551749"
-                    pets: []
+                      firstName: George
+                      lastName: Franklin
+                      address: 110 W. Liberty St.
+                      city: Madison
+                      telephone: "6085551023"
+                      pets:
+                      - id: 1
+                        name: Leo
+                        birthDate: 2010-09-07
+                        type:
+                          id: 1
+                          name: cat
+                        ownerId: 1
+                        visits: []
+                    - id: 2
+                      firstName: Betty
+                      lastName: Davis
+                      address: 638 Cardinal Ave.
+                      city: Sun Prairie
+                      telephone: "6085551749"
+                      pets: []
+                    totalElements: 2
+                    page: 0
+                    size: 10
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/OwnerDto"
+                $ref: "#/components/schemas/OwnerPageDto"
           description: OK
         "400":
           content:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ProblemDetail"
-          description: Bad Request
+          description: Unknown sort column or invalid page parameters
         "404":
           content:
             '*/*':
@@ -250,7 +277,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProblemDetail"
           description: Internal Server Error
-      summary: List owners
+      summary: "List owners, one page at a time"
       tags:
       - owner-rest-controller
     post:
@@ -1686,6 +1713,31 @@ components:
       - firstName
       - lastName
       - telephone
+    OwnerPageDto:
+      type: object
+      description: One page of owners
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/OwnerDto"
+        page:
+          type: integer
+          format: int32
+          description: Zero-based page index
+        size:
+          type: integer
+          format: int32
+          description: Requested rows per page
+        totalElements:
+          type: integer
+          format: int64
+          description: "Owners matching the search, over all pages"
+      required:
+      - content
+      - page
+      - size
+      - totalElements
     PetDto:
       type: object
       properties:

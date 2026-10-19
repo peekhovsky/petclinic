@@ -1,6 +1,6 @@
-Feature: Search owners by last name
+Feature: Search owners
   As a clinic user
-  I want to filter owners by typing part of a last name
+  I want to filter owners by typing any part of what the grid shows
   So that I can quickly find the owners I care about
 
   Background:
@@ -8,7 +8,7 @@ Feature: Search owners by last name
       | Harry Potter   |
       | Beatrix Potter |
 
-  Scenario Outline: Filter owners by a case-sensitive prefix of the last name
+  Scenario Outline: Filter owners by text, ignoring case
     When I open the owners page
     And I search owners for "<search>"
     Then exactly these owners are listed: "<owners>"
@@ -17,13 +17,18 @@ Feature: Search owners by last name
       | search | owners                       |
       | Potter | Harry Potter, Beatrix Potter |
       | Pot    | Harry Potter, Beatrix Potter |
-      | otter  |                              |
-      | Harry  |                              |
-      | potter |                              |
+      | otter  | Harry Potter, Beatrix Potter |
+      | potter | Harry Potter, Beatrix Potter |
+      | harry  | Harry Potter                 |
       | Zzzz   |                              |
 
   @generate_sequence
-  Scenario: Searching with an empty last name lists every owner
+  Scenario: Searching with an empty text lists the first page of owners
     When I open the owners page
     And I search owners for ""
-    Then every owner in the clinic is listed
+    Then the first 10 owners of the clinic are listed
+
+  Scenario: The next page lists the remaining owners
+    When I open the owners page
+    And I go to the next page
+    Then the remaining owners of the clinic are listed after the first 10
